@@ -20,7 +20,7 @@ Aqui está a tabela com alguns exemplos de como mapear os drivers:
 | **Lentidão em algumas telas/etapas**       | O tempo de resposta deve ser aceitável                            | Tempo de carregamento < 2s                        | Melhorar a performance das telas para otimizar a experiência do usuário e reduzir a taxa de abandono. |
 
 
-### 1.1 Erros na Exibição dos Ganhos dos Entregadores
+### 1.1 Erros na Exibição dos Ganhos dos Entregadores (testado com Gherkin)
 
 **O que é?**  
 Este problema ocorre quando os valores exibidos para os entregadores, que mostram os ganhos após a realização das entregas, não coincidem com os cálculos reais realizados pelo sistema. Isso pode gerar confusão entre os entregadores, que podem se sentir desmotivados ao perceberem que o valor mostrado não corresponde ao que de fato foi calculado e devido.
@@ -34,7 +34,7 @@ Este problema ocorre quando os valores exibidos para os entregadores, que mostra
 **O que afeta?**  
 Esse erro afeta diretamente a transparência e a confiança dos entregadores na plataforma, o que pode levar a um aumento no número de solicitações de suporte e até mesmo a uma queda na satisfação e no engajamento dos entregadores. A longo prazo, isso pode resultar em uma perda de competitividade para a plataforma, caso os entregadores não se sintam confiantes em relação ao sistema de pagamentos.
 
-### 1.2 Lentidão em Algumas Telas/Etapas
+### 1.2 Lentidão em Algumas Telas/Etapas (testado com JMeter)
 
 **O que é?**  
 A lentidão em algumas telas ou etapas refere-se ao atraso no tempo de resposta do sistema durante a navegação ou ao carregar informações. Quando os usuários, sejam clientes ou entregadores, interagem com a plataforma, eles esperam uma experiência ágil. Se o tempo de carregamento for elevado, isso pode causar frustração e até mesmo abandono da plataforma.
@@ -52,96 +52,43 @@ Esse problema afeta diretamente a experiência do usuário, diminuindo a satisfa
 
 ### 2.1 Erros na Exibição dos Ganhos dos Entregadores 
 
-#### a) Falhas na lógica de cálculo que gera a exibição dos ganhos
+#### 📌 **Testes Automatizados com Gherkin e Cucumber**  
 
-Neste caso, utilizarei o Cucumber com Gherkin para testar o comportamento esperado da exibição dos ganhos com base na lógica de cálculo.
+Este projeto utiliza **Gherkin** para definir cenários de teste de forma legível e estruturada. O **Cucumber.js** interpreta esses cenários e executa os testes automaticamente.  
 
-1. Funcionalidade esperada: Verificar se o valor exibido corresponde ao valor calculado, considerando a lógica de cálculo correta.
-   
-2. Passos para criar o teste:
-   - Feature File (usando Gherkin):
+##### 📂 **Onde encontrar os arquivos?**  
+Os testes seguem a seguinte estrutura:  
 
+```
+📁 features/
+   ├── exibicao-ganhos-entregadores.feature  # Arquivo Gherkin com os cenários de teste
+📁 step-definitions/
+   ├── exibicao-ganhos-entregadores.ts  # Implementação dos passos dos testes
+📁 SistemaRappi/
+   ├── calculo-ganhos-entregadores.ts  # Lógica do cálculo de ganhos
+```
+
+##### 📝 **Como funciona?**  
+1. O **arquivo `.feature`** contém os cenários de teste escritos em Gherkin, descrevendo a lógica esperada.  
+2. O **arquivo de step definitions** implementa cada passo do Gherkin usando TypeScript.  
+3. Durante a execução, o **Cucumber** lê os cenários, chama os métodos correspondentes e valida os resultados.  
+
+##### ✅ **Exemplo de Teste (Gherkin)**  
+Arquivo: `features/exibicao-ganhos-entregadores.feature`  
 ```gherkin
-Feature: Verificação da exibição dos ganhos dos entregadores
-
-  Scenario: Ganho exibido corretamente
+Feature: Cálculo de ganhos dos entregadores
+  Scenario: Entregador visualiza seus ganhos corretamente
     Given o sistema tem uma lógica de cálculo de ganhos baseada em taxas e entregas realizadas
     When o entregador solicita a exibição dos seus ganhos
     Then o valor exibido deve ser igual ao valor calculado pela lógica do sistema
-
-  Scenario: Erro na exibição de ganhos
-    Given o sistema tem uma lógica de cálculo de ganhos com falha na aplicação das taxas
-    When o entregador solicita a exibição dos seus ganhos
-    Then o valor exibido deve ser diferente do valor calculado, indicando um erro na lógica
 ```
 
-   - **Step Definitions** (em JavaScript, ou outra linguagem que esteja usando):
-
-```javascript
-const { Given, When, Then } = require('cucumber');
-const assert = require('assert');
-const sistema = require('../sistema'); // Simulação da lógica de cálculo
-
-Given('o sistema tem uma lógica de cálculo de ganhos baseada em taxas e entregas realizadas', function () {
-  // Configurar sistema com lógica de cálculo
-});
-
-When('o entregador solicita a exibição dos seus ganhos', function () {
-  this.ganhoExibido = sistema.calcularGanhos(); // Método que simula o cálculo
-});
-
-Then('o valor exibido deve ser igual ao valor calculado pela lógica do sistema', function () {
-  assert.strictEqual(this.ganhoExibido, sistema.ganhoCalculado);
-});
+🔹 **Executando os testes**  
+Para rodar os testes, utilize o comando:  
+```sh
+npm test
 ```
-
-3. **Execução**:
-   - Você deve rodar o **Cucumber** para verificar se o comportamento está conforme esperado, especialmente para garantir que qualquer erro na lógica de cálculo seja identificado.
-   - Caso o cálculo esteja errado, o teste falhará e você poderá corrigir a lógica.
-
----
-
-#### b) **Problemas de sincronização entre os sistemas de pagamento e exibição de dados**
-
-A sincronização entre os sistemas pode ser testada da mesma maneira. Vamos verificar se os dados de pagamento estão sendo atualizados corretamente e exibidos na interface em tempo real.
-
-1. **Feature File** (Gherkin):
-
-```gherkin
-Feature: Verificação da sincronização entre o sistema de pagamento e a exibição dos dados
-
-  Scenario: Sincronização correta dos dados
-    Given o sistema de pagamento e o sistema de exibição de dados estão sincronizados
-    When o entregador realiza uma entrega
-    Then o valor de ganho exibido deve refletir a atualização do pagamento realizado
-
-  Scenario: Sincronização falha dos dados
-    Given o sistema de pagamento e o sistema de exibição de dados estão desincronizados
-    When o entregador realiza uma entrega
-    Then o valor exibido deve estar desatualizado e não refletir o valor real do pagamento
-```
-
-2. **Step Definitions**:
-
-```javascript
-Given('o sistema de pagamento e o sistema de exibição de dados estão sincronizados', function () {
-  sistema.sincronizarPagamentosExibicao();
-});
-
-When('o entregador realiza uma entrega', function () {
-  this.pagamento = sistema.processarEntrega();
-});
-
-Then('o valor de ganho exibido deve refletir a atualização do pagamento realizado', function () {
-  assert.strictEqual(sistema.ganhoExibido, this.pagamento.valor);
-});
-```
-
-3. **Execução**:
-   - O teste irá validar se, ao realizar a entrega, o sistema de exibição é atualizado corretamente com o valor de pagamento.
-   - Caso haja desincronização, o teste falhará.
-
----
+![prova de teste](imagens/test.png)
 
 ### 2.2 **Lentidão em Algumas Telas/Etapas**
 
