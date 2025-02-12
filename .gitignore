@@ -1,0 +1,43 @@
+# Dependências do Node.js
+node_modules/
+
+# Logs
+logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# Ambiente
+.env
+
+# Diretórios temporários
+tmp/
+temp/
+
+# Arquivos de build
+build/
+dist/
+
+# Cache do npm
+.npm/
+
+# Cache do pacote Yarn
+.yarn/
+.pnp.*
+
+# Sistema operacional
+.DS_Store
+Thumbs.db
+
+# IDEs e editores de código
+.vscode/
+.idea/
+
+# Arquivos de lock
+package-lock.json
+yarn.lock
+
+# Outros caches
+coverage/
