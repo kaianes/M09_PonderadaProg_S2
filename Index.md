@@ -92,42 +92,60 @@ npm test
 
 ### 2.2 **Lentidão em Algumas Telas/Etapas**
 
-#### a) **Consultas ao banco de dados não otimizadas**
+Para essa etapa da análise de qualidade do sistema da Rappi, foi criada uma tabela chamada "entregadores", no [Supabase](https://supabase.com/), que me disponibiliza uma api rest automaticamente:
+(aqui eu quero focar em comprovar a hipótese de que maiores volumes de requisições influenciam diretamente no tempo de resposta do sistema).
 
-A performance de consultas ao banco de dados pode ser testada com o **JMeter**, já que ele é ideal para medir a latência e o tempo de resposta de consultas em sistemas de backend.
+1. Testando no Jmeter
 
-1. **Testando com JMeter**:
-   - Configure uma **Request HTTP** no **JMeter** para simular uma consulta ao banco de dados que represente uma consulta comum feita na plataforma.
-   - Realize o teste para medir o tempo de resposta da consulta.
+O Thread Group define o número de usuários virtuais (threads) e a frequência com que as requisições serão feitas. Sendo assim, podem-se especificar os seguintes parâmetros:
+![config](imagens/volumetria-requisicoes.png)
 
-2. **Passos**:
-   - No JMeter, crie um novo **Test Plan**.
-   - Adicione um **Thread Group** e configure o número de usuários virtuais para simular a carga.
-   - Adicione uma **HTTP Request** para simular a consulta ao banco.
-   - Utilize o **View Results Tree** ou **Summary Report** para medir o tempo de resposta.
-   - Analise os resultados. Se o tempo de resposta for maior que o aceitável (ex: mais de 2 segundos), a consulta pode precisar de otimização.
+Configure:
+Number of Threads (Users): Número de requisições simultâneas.
+Ramp-Up Period (in seconds): O tempo que o JMeter levará para iniciar todas as threads.
+Loop Count: Quantas vezes cada thread realizará a requisição.
 
-#### b) **Carregamento de recursos pesados nas páginas**
+![jmeter](imagens/grafico_jmeter.png)
 
-Para testar a performance do carregamento de recursos (como imagens e scripts pesados) nas páginas, podemos também usar o **JMeter** para medir o tempo de carregamento completo da página ou do recurso específico.
+### 1. Interpretação do gráfico
 
-1. **Testando com JMeter**:
-   - Crie um **HTTP Request** para simular o carregamento da página que contém os recursos pesados.
-   - Use o **HTML Parser** no JMeter para capturar todos os recursos carregados (como imagens, CSS, JS).
-   - Meça o tempo total de carregamento da página.
+   - **Linha Azul (Average)**: Representa o **tempo médio de resposta** das requisições. Neste caso, ela está aumentando de forma constante, o que indica que o sistema está ficando mais lento à medida que o número de requisições aumenta. O valor **1135 ms** é o tempo médio de resposta no final do teste.
+   - **Linha Verde (Median)**: A linha verde representa o **tempo mediano** das requisições, ou seja, o tempo que divide as requisições em duas metades: 50% dos tempos de resposta são menores que a mediana e 50% são maiores. A mediana, **1073 ms**, também segue uma tendência de aumento, mas não de forma tão acentuada quanto a média. Isso indica que a maioria das requisições está se comportando de maneira mais consistente, mas ainda assim há uma piora no desempenho.
+   - **Linha Vermelha (Deviation)**: A linha vermelha mostra o **desvio padrão** dos tempos de resposta. Um valor **alto de desvio** significa que há uma grande variação nos tempos de resposta das requisições. O valor de **332 ms** sugere que algumas requisições estão levando muito mais tempo para serem processadas do que outras. Isso indica que, além do tempo médio e da mediana subirem, algumas requisições estão enfrentando picos de latência.
+   - **Linha Roxa (Throughput)**: A linha roxa mostra o **throughput**, ou seja, a quantidade de requisições processadas por minuto. O valor de **92.061 requisições/minuto** mostra que o sistema está processando um bom número de requisições, mas o throughput está se estabilizando, o que pode indicar que o servidor está chegando ao limite de sua capacidade de processamento.
 
-2. **Passos**:
-   - No **Test Plan** do JMeter, crie um **Thread Group** e adicione a **HTTP Request** para carregar a página.
-   - Use o **HTML Parser** para identificar todos os recursos carregados.
-   - Analise os resultados no **Summary Report** e observe o tempo total de carregamento. Se os recursos pesados causarem atraso no tempo de carregamento, será necessário otimizá-los.
+### 2. Informações do gráfico:
+   - **No of Samples (Número de amostras)**: **1243 requisições** foram feitas durante o teste.
+   - **Deviation**: O desvio padrão de **332 ms** reflete uma variação significativa no tempo de resposta entre as requisições. Esse é um ponto importante para investigar, pois pode indicar gargalos ou picos de latência em algumas requisições.
+   - **Latest Sample**: O tempo de resposta da última requisição foi **2400 ms**, o que é significativamente mais alto do que a média (**1135 ms**) e a mediana (**1073 ms**). Isso sugere que algumas requisições estão levando muito mais tempo para serem processadas.
+   - **Average**: O **tempo médio de resposta** ao longo do teste foi **1135 ms**, o que indica uma latência considerável.
+   - **Median**: O **tempo mediano de resposta** foi **1073 ms**, o que está um pouco abaixo da média e reflete que a maioria das requisições está tendo um desempenho mais consistente, mas ainda assim com um tempo de resposta elevado.
 
----
+### O que isso significa?
 
-### Resumo da Estratégia
+1. **Aumento do tempo de resposta médio**:
+   - O aumento contínuo do tempo de resposta médio (linha azul) ao longo do teste é um sinal claro de que o sistema está ficando sobrecarregado à medida que o número de requisições aumenta. Isso pode ser causado por uma série de fatores, como limitações de hardware, problemas na infraestrutura do servidor ou falhas no código que não estão conseguindo lidar com a carga adequadamente.
 
-- **Cucumber com Gherkin**: Ideal para testar comportamentos específicos e garantir que as regras de negócio estão sendo corretamente aplicadas no sistema, como a exibição dos ganhos e a sincronização dos dados.
-- **JMeter**: Melhor ferramenta para medir a performance e tempo de resposta de consultas ao banco de dados e carregar recursos pesados nas páginas, garantindo que a latência seja minimizada.
+2. **Desvio elevado (linha vermelha)**:
+   - O desvio alto (linha vermelha) sugere que, além do aumento no tempo médio de resposta, algumas requisições estão sendo muito mais lentas do que outras, o que pode indicar que o servidor está experimentando picos de latência ou que há algum tipo de gargalo específico em algumas partes do sistema.
 
-Essa combinação de ferramentas ajudará a validar tanto os aspectos funcionais quanto de performance da sua aplicação.
+3. **Throughput estabilizado**:
+   - O throughput está estável (aproximadamente **92 requisições/minuto**), mas não parece estar aumentando. Isso indica que o servidor conseguiu atingir um limite de requisições por minuto, o que pode significar que a capacidade do servidor está sendo saturada.
 
+4. **Última requisição muito mais lenta**:
+   - O tempo de resposta da última requisição foi **2400 ms**, que é mais de duas vezes maior do que o tempo médio. Isso pode indicar que o servidor não está mais conseguindo processar as requisições com eficiência à medida que a carga aumenta, levando a picos de latência.
+
+### O que fazer a partir daqui?
+
+1. **Investigação de Gargalos**:
+   - O aumento do desvio e os tempos elevados de resposta indicam que pode haver um gargalo no servidor. Vale investigar os logs do servidor e monitorar o uso de CPU, memória e outros recursos durante o teste.
+
+2. **Ajuste de Infraestrutura**:
+   - Se o sistema estiver alcançando a saturação com esse número de requisições, pode ser necessário escalar a infraestrutura. Isso pode incluir o aumento de recursos do servidor, o uso de balanceamento de carga ou a adoção de uma arquitetura distribuída.
+
+3. **Otimização de Código e Banco de Dados**:
+   - Se o servidor está atingindo sua capacidade de processamento, a otimização de partes do código (como consultas ao banco de dados ou operações de IO) pode ajudar a reduzir o tempo de resposta.
+
+### Conclusão:
+O gráfico mostra um aumento claro no tempo de resposta e um desvio alto conforme o número de requisições aumenta, indicando que o sistema está sobrecarregado. A próxima etapa seria investigar os motivos dessa lentidão, como limitações de hardware ou gargalos no servidor, e aplicar soluções de escalabilidade ou otimização.
 
